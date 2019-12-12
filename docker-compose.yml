@@ -1,0 +1,152 @@
+version: "3.6"
+services:
+  watchtower:
+    container_name: watchtower
+    restart: always
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/pi/.docker/config.json:/config.json
+    command: --schedule "0 0 23 * * SUN" --cleanup
+  portainer:
+    container_name: portainer
+    image: portainer/portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /opt/portainer:/data:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: "no" # because the exit code(s) are wrong
+  organizr:
+    container_name: organizr
+    restart: always
+    image: linuxserver/organizr
+    volumes:
+      - /home/pi/docker/organizr:/config
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "8081:80"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+  homeassistant:
+    image: homeassistant/raspberrypi4-homeassistant
+    container_name: homeassistant
+    volumes:
+      - /home/pi/docker/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "8123:8123"
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    # devices:
+      # - /dev/ttyUSB0:/dev/ttyUSB0
+      # - /dev/ttyUSB1:/dev/ttyUSB1
+      # - /dev/ttyACM0:/dev/ttyACM0
+    # healthcheck:
+      # test: ["CMD", "curl", "-s", "http://localhost:8123"]
+      # interval: 5s
+      # timeout: 3s
+      # retries: 100
+  qbittorrent:
+    image: "linuxserver/qbittorrent"
+    container_name: "qbittorrent"
+    volumes:
+      - /home/pi/docker/qbittorrent:/config
+      - /media/pi/sd32/downloads/completed:/downloads
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "9001:9001"
+      - "6881:6881"
+      - "6881:6881/udp"
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+      - UMASK_SET=002
+      - WEBUI_PORT=9001
+  radarr:
+    image: "linuxserver/radarr"
+    container_name: "radarr"
+    volumes:
+      - /home/pi/docker/radarr:/config
+      - /media/pi/sd32/downloads/completed:/downloads
+      - /media/pi/sd32/movies:/movies
+      - "/etc/localtime:/etc/localtime:ro"
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "7878:7878"
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+  sonarr:
+    image: "linuxserver/sonarr"
+    container_name: "sonarr"
+    volumes:
+      - /home/pi/docker/sonarr:/config
+      - /media/pi/sd32/downloads/completed:/downloads
+      - /media/pi/sd32/tvshows:/tv
+      - "/etc/localtime:/etc/localtime:ro"
+      - /home/pi/docker/shared:/shared
+    ports:
+        - "8989:8989"
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+      - UMASK_SET=022 #optional
+    volumes:
+      - /home/pi/docker/plex:/config
+      - /home/pi/Downloads/plex_tmp:/transcode
+      - /media/pi/sd32/tvshows:/tv
+      - /media/pi/sd32/movies:/movies
+      - /home/pi/docker/shared:/shared
+    restart: unless-stopped
+  hydra:
+    image: "linuxserver/hydra"
+    container_name: "hydra"
+    volumes:
+      - /home/pi/docker/hydra:/config
+      - /media/pi/sd32/downloads:/downloads
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "5075:5075"
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+  jackett:
+    image: "linuxserver/jackett"
+    container_name: "jackett"
+    volumes:
+      - /home/pi/docker/jackett:/config
+      - /media/pi/sd32/downloads/completed:/downloads
+      - "/etc/localtime:/etc/localtime:ro"
+      - /home/pi/docker/shared:/shared
+    ports:
+      - "9117:9117"
+    restart: always
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
